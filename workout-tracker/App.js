@@ -49,7 +49,7 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName={userToken ? "Main" : "Register"}>
         <Stack.Screen name="Register" component={RegisterTab} />
-        <Stack.Screen name="Main">
+        <Stack.Screen name="Main" options={{ headerShown: false }}>
           {props => <TabNavigation {...props} userDetails={userDetails} />}
         </Stack.Screen>
       </Stack.Navigator>
