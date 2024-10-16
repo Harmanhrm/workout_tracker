@@ -83,28 +83,28 @@ app.get('/user-details', async (req, res) => {
 app.post('/workout', async (req, res) => {
   const client = await pool.connect();
   try {
-    const { name, categoryId, typeId, userId, cardioDetails, strengthDetails } = req.body;
+    const { name, categoryId, typeId, userId, date, cardioDetails, strengthDetails } = req.body;
 
-    console.log('Received workout data:', { name, categoryId, typeId, userId, cardioDetails, strengthDetails });
+    console.log('Received workout data:', { name, categoryId, typeId, userId, date, cardioDetails, strengthDetails });
 
     await client.query('BEGIN');
 
     const workoutResult = await client.query(
-      'INSERT INTO workout (name, category_id, type_id, user_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, categoryId, typeId, userId]
+      'INSERT INTO workout (name, category_id, type_id, user_id, date) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, categoryId, typeId, userId, date]
     );
 
     const workoutId = workoutResult.rows[0].id;
     console.log('Inserted workout with ID:', workoutId);
 
-    if (typeId === 2 && cardioDetails) { // Assuming typeId 1 is for cardio
+    if (typeId === 2 && cardioDetails) { // Assuming typeId 2 is for cardio
       const { distance, calories, speed, time } = cardioDetails;
       console.log('Inserting cardio details:', { workoutId, distance, calories, speed, time });
       await client.query(
         'INSERT INTO cardio_workout (workout_id, distance, calories, speed, time) VALUES ($1, $2, $3, $4, $5)',
         [workoutId, distance, calories, speed, time]
       );
-    } else if (typeId === 1 && strengthDetails) { // Assuming typeId 2 is for strength
+    } else if (typeId === 1 && strengthDetails) { // Assuming typeId 1 is for strength
       for (const set of strengthDetails) {
         const { set_number, reps, weight, rpe, hold_time } = set;
         console.log('Inserting strength set:', { workoutId, set_number, reps, weight, rpe, hold_time });

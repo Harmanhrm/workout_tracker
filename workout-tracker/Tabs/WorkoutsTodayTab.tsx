@@ -91,6 +91,7 @@ const WorkoutsToday = ({ userDetails }) => {
         typeId: workoutType === 'cardio' ? 2 : 1,
         cardioDetails: workoutType === 'cardio' ? newCardioWorkout : null,
         strengthDetails: workoutType === 'strength' ? filteredStrengthSets : null,
+        date: new Date().toISOString(),
       };
   
       console.log('Sending workout data:', workoutData);
