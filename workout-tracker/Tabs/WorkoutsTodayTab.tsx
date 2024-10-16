@@ -5,6 +5,8 @@ import axios from 'axios';
 import { List } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { SERVER_IP } from '@env';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 
 const WorkoutsToday = ({ userDetails }) => {
   const [workouts, setWorkouts] = useState([]);
@@ -292,12 +294,29 @@ const WorkoutsToday = ({ userDetails }) => {
     newDate.setDate(newDate.getDate() + days);
     setSelectedDate(newDate);
   };
+  const formattedDate = (() => {
+    const today = new Date();
+    if (
+      selectedDate.getDate() === today.getDate() &&
+      selectedDate.getMonth() === today.getMonth() &&
+      selectedDate.getFullYear() === today.getFullYear()
+    ) {
+      return 'Today';
+    }
+    return selectedDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  })();
 
-  const formattedDate = selectedDate.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || new Date();
+    setShowDatePicker(false);
+    setSelectedDate(currentDate);
+  };
 
   return (
     <View style={{ flex: 1, padding: 20, marginBottom: 1 }}>
@@ -307,12 +326,22 @@ const WorkoutsToday = ({ userDetails }) => {
           <TouchableOpacity onPress={() => changeDate(-1)}>
             <Icon name="arrow-back" size={20} />
           </TouchableOpacity>
-          <Text style={{ marginHorizontal: 10 }}>{formattedDate}</Text>
+          <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+            <Text style={{ marginHorizontal: 10 }}>{formattedDate}</Text>
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => changeDate(1)}>
             <Icon name="arrow-forward" size={20} />
           </TouchableOpacity>
         </View>
       </View>
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
       <Button title="Add Workout" onPress={() => setModalVisible(true)} />
       <FlatList
       data={workouts}
