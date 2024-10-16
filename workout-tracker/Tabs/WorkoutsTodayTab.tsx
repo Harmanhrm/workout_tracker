@@ -286,7 +286,7 @@ const WorkoutsToday = ({ userDetails }) => {
   );
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
+    <View style={{ flex: 1, padding: 20, marginBottom:1 }}>
       <Text style={styles.welcomeText}>Welcome, {userDetails.username}!</Text>
       <Button title="Add Workout" onPress={() => setModalVisible(true)} />
       <FlatList
@@ -294,21 +294,23 @@ const WorkoutsToday = ({ userDetails }) => {
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
         <View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <List.Accordion
+            title={
+              <View>
           <Text style={styles.accordionTitle}>{item.name}</Text>
-         
+          <Text style={styles.detailText}></Text>
+            <Text style={styles.detailText}>
+              {`${new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+            </Text>
           </View>
-<View style={styles.separator} />
-<List.Accordion
-  title={
-    <Text style={styles.detailText}>
-      {`${new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-    </Text>
-  }
-  expanded={expanded[item.id]}
-  onPress={() => toggleExpand(item.id)}
- 
->
+          
+        }
+          expanded={expanded[item.id]}
+          onPress={() => toggleExpand(item.id)}
+          titleStyle={styles.accordionTitle}
+          style={styles.accordion} 
+        >
+          
           <View style={styles.workoutDetails}>
           <Text style={styles.detailText}>
             Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
@@ -325,7 +327,9 @@ const WorkoutsToday = ({ userDetails }) => {
             </View>
           ))}
           </View>
+          
         </List.Accordion>
+        <View style={styles.separator} />
         </View>
       )}
       />
@@ -484,9 +488,11 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: 'gray',
     marginVertical: 10,
-    width: '10%', // Make the separator a horizontal line
+    width: '0%', // Make the separator a horizontal line
   },
- 
+  accordion: {
+    backgroundColor: 'white',
+  },
 });
 
 export default WorkoutsToday;
