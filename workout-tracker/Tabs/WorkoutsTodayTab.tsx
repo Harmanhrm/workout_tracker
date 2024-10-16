@@ -113,13 +113,18 @@ const WorkoutsToday = ({ userDetails }) => {
   };
 
   const addStrengthSet = () => {
-    setCompletedStrengthSets([...completedStrengthSets, ...strengthSets]);
+    const newSetNumber = completedStrengthSets.length + 1;
+    const updatedStrengthSets = strengthSets.map((set, index) => ({
+      ...set,
+      set_number: newSetNumber + index,
+    }));
+    setCompletedStrengthSets([...completedStrengthSets, ...updatedStrengthSets]);
     setStrengthSets([
       {
-        set_number: strengthSets.length + 1,
-        reps: 0,
-        weight: 0,
-        rpe: 0,
+        set_number: completedStrengthSets.length + updatedStrengthSets.length + 1,
+        reps: strengthSets[0].reps,
+        weight: strengthSets[0].weight,
+        rpe: strengthSets[0].rpe,
       },
     ]);
   };
@@ -137,13 +142,24 @@ const WorkoutsToday = ({ userDetails }) => {
 
   const incrementValue = (field) => {
     const newSets = [...strengthSets];
-    newSets[0][field] = (parseInt(newSets[0][field]) || 0) + 1;
+    if (field === 'weight') {
+      newSets[0][field] = (parseInt(newSets[0][field]) || 0) + 5;
+    } else {
+      newSets[0][field] = (parseInt(newSets[0][field]) || 0) + 1;
+      if (field === 'rpe' && newSets[0][field] > 10) {
+        newSets[0][field] = 10; // Ensure the value does not exceed 10
+      }
+    }
     setStrengthSets(newSets);
   };
 
   const decrementValue = (field) => {
     const newSets = [...strengthSets];
+    if (field === 'weight') {
+      newSets[0][field] = (parseInt(newSets[0][field]) || 0) - 5;
+    } else {
     newSets[0][field] = Math.max((parseInt(newSets[0][field]) || 0) - 1, 0);
+    }
     setStrengthSets(newSets);
   };
 
@@ -224,13 +240,14 @@ const WorkoutsToday = ({ userDetails }) => {
           </TouchableOpacity>
         </View>
         <TextInput
-          style={styles.inputSmall}
-          placeholder="RPE"
-          value={strengthSets[0].rpe === 0 ? '' : strengthSets[0].rpe.toString()}
-          onChangeText={(text) => {
-            const newSets = [...strengthSets];
-            newSets[0].rpe = parseInt(text) || 0;
-            setStrengthSets(newSets);
+           style={styles.inputSmall}
+           placeholder="RPE"
+           value={strengthSets[0].rpe === 0 ? '' : strengthSets[0].rpe.toString()}
+           onChangeText={(text) => {
+             const newSets = [...strengthSets];
+             const rpeValue = parseInt(text) || 0;
+             newSets[0].rpe = rpeValue > 10 ? 10 : rpeValue; // Ensure the value does not exceed 10
+             setStrengthSets(newSets);
           }}
         />
         <View style={styles.arrowContainer}>
@@ -242,21 +259,6 @@ const WorkoutsToday = ({ userDetails }) => {
           </TouchableOpacity>
         </View>
           </View>
-          <View style={styles.buttonRow}>
-            <Button title="Add Set" onPress={addStrengthSet} />
-            <Button title="Clear" onPress={clearStrengthSet} />
-          </View>
-          {completedStrengthSets.map((set, index) => (
-            <View key={index} style={styles.setContainer}>
-              <Text>Set {index + 1} - </Text>
-              <Text>Reps: {set.reps}</Text>
-              <Text>Weight: {set.weight}</Text>
-              <Text>RPE: {set.rpe}</Text>
-              <TouchableOpacity onPress={() => removeCompletedSet(index)}>
-                <Icon name="close" size={20} color="red" />
-              </TouchableOpacity>
-            </View>
-          ))}
         </>
       );
     }
@@ -287,65 +289,82 @@ const WorkoutsToday = ({ userDetails }) => {
       <Text style={styles.welcomeText}>Welcome, {userDetails.username}!</Text>
       <Button title="Add Workout" onPress={() => setModalVisible(true)} />
       <FlatList
-        data={workouts}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <List.Accordion
-            title={`${item.name} - ${new Date(item.date).toLocaleDateString()}`}
-            expanded={expanded[item.id]}
-            onPress={() => toggleExpand(item.id)}
-            titleStyle={styles.accordionTitle}
-          >
-            <View style={styles.workoutDetails}>
-              <Text style={styles.detailText}>Category ID: {item.category_id}</Text>
-              <Text style={styles.detailText}>Type ID: {item.type_id}</Text>
-              {item.strength_workouts && item.strength_workouts.map((set, index) => (
-                <View key={index} style={styles.setContainer}>
-                  <Text style={styles.detailText}>Set {set.set_number} - Reps: {set.reps}, Weight: {set.weight}, RPE: {set.rpe}, Hold Time: {set.hold_time}</Text>
-                </View>
-              ))}
-              {item.cardio_workouts && item.cardio_workouts.map((cardio, index) => (
-                <View key={index} style={styles.setContainer}>
-                  <Text style={styles.detailText}>Distance: {cardio.distance}, Calories: {cardio.calories}, Speed: {cardio.speed}, Time: {cardio.time}</Text>
-                </View>
-              ))}
-            </View>
-          </List.Accordion>
-        )}
+      data={workouts}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={({ item }) => (
+        <List.Accordion
+        title={`${item.name} - ${new Date(item.date).toLocaleDateString()}`}
+        expanded={expanded[item.id]}
+        onPress={() => toggleExpand(item.id)}
+        titleStyle={styles.accordionTitle}
+        >
+        <View style={styles.workoutDetails}>
+        <Text style={styles.detailText}>
+          Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
+        </Text>
+        <Text style={styles.detailText}>Type: {item.type_id === 1 ? 'Strength' : 'Cardio'}</Text>
+          {item.strength_workouts && item.strength_workouts.map((set, index) => (
+          <View key={index} style={styles.setContainer}>
+            <Text style={styles.detailText}>Set {set.set_number} - {set.reps} reps | {set.weight} kgs | {set.rpe} RPE</Text>
+          </View>
+          ))}
+          {item.cardio_workouts && item.cardio_workouts.map((cardio, index) => (
+          <View key={index} style={styles.setContainer}>
+            <Text style={styles.detailText}>Distance: {cardio.distance}, Calories: {cardio.calories}, Speed: {cardio.speed}, Time: {cardio.time}</Text>
+          </View>
+          ))}
+        </View>
+        </List.Accordion>
+      )}
       />
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+      animationType="slide"
+      transparent={true}
+      visible={modalVisible}
+      onRequestClose={() => setModalVisible(false)}
       >
-        <ScrollView contentContainerStyle={styles.modalView}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-            <Icon name="close" size={24} color="black" />
-          </TouchableOpacity>
-          <TextInput
-            style={styles.input}
-            placeholder="Name"
-            value={newWorkout.name}
-            onChangeText={handleNameChange}
-          />
-          <Button
-            title={showSuggestions ? "Hide Suggestions" : "Show Suggestions"}
-            onPress={() => setShowSuggestions(!showSuggestions)}
-          />
-          {renderSearchResults()}
-          {renderCategoryDropdown()}
-          <Picker
-            selectedValue={workoutType}
-            style={styles.input}
-            onValueChange={(itemValue) => setWorkoutType(itemValue)}
-          >
-            <Picker.Item label="Cardio" value="cardio" />
-            <Picker.Item label="Strength" value="strength" />
-          </Picker>
-          {renderWorkoutFields()}
+      <ScrollView contentContainerStyle={styles.modalView}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+        <Icon name="close" size={24} color="black" />
+        </TouchableOpacity>
+        <TextInput
+        style={styles.input}
+        placeholder="Name"
+        value={newWorkout.name}
+        onChangeText={handleNameChange}
+        />
+        <Button
+        title={showSuggestions ? "Hide Suggestions" : "Show Suggestions"}
+        onPress={() => setShowSuggestions(!showSuggestions)}
+        />
+        {renderSearchResults()}
+        {renderCategoryDropdown()}
+        <Picker
+        selectedValue={workoutType}
+        style={styles.input}
+        onValueChange={(itemValue) => setWorkoutType(itemValue)}
+        >
+        <Picker.Item label="Cardio" value="cardio" />
+        <Picker.Item label="Strength" value="strength" />
+        </Picker>
+        {renderWorkoutFields()}
+        <View style={styles.buttonRow}>
+          <Button title="Add Set" onPress={addStrengthSet} />
           <Button title="Add Workout" onPress={handleAddWorkout} />
-        </ScrollView>
+          <Button title="Clear" onPress={clearStrengthSet} />
+        </View>
+        {completedStrengthSets.map((set, index) => (
+          <View key={index} style={styles.setContainer}>
+            <Text>{index + 1} </Text>
+            <Text>{set.weight} kgs</Text>
+            <Text>{set.reps} reps </Text>
+            <Text> {set.rpe} RPE</Text>
+            <TouchableOpacity onPress={() => removeCompletedSet(index)}>
+              <Icon name="close" size={20} color="red" />
+            </TouchableOpacity>
+          </View>
+        ))}
+      </ScrollView>
       </Modal>
     </View>
   );
@@ -357,7 +376,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
-    padding: 20,
+    padding: 40,
     margin: 20,
     borderRadius: 10,
     shadowColor: '#000',
@@ -378,7 +397,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10
   },
   inputSmall: {
-    width: '20%',
+    width: '30%', // Adjust width to fit more items per row
     height: 40,
     borderColor: 'gray',
     borderWidth: 1,
@@ -389,19 +408,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingTop: 20, 
     marginBottom: 20,
+    width: '100%', // Adjust width to fit more items per row
+    margin: 5, // Add margin for spacing
   },
   setRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+    marginRight: 50,
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginTop: 10,
+    marginTop: 25,
   },
   arrowContainer: {
     flexDirection: 'column',
@@ -440,6 +463,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 5,
   },
+  setHeading: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'gray',
+    marginVertical: 10,
+    width: '10%', // Make the separator a horizontal line
+  },
+ 
 });
 
 export default WorkoutsToday;
