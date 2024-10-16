@@ -293,29 +293,40 @@ const WorkoutsToday = ({ userDetails }) => {
       data={workouts}
       keyExtractor={(item) => item.id.toString()}
       renderItem={({ item }) => (
-        <List.Accordion
-        title={`${item.name} - ${new Date(item.date).toLocaleDateString()}`}
-        expanded={expanded[item.id]}
-        onPress={() => toggleExpand(item.id)}
-        titleStyle={styles.accordionTitle}
-        >
-        <View style={styles.workoutDetails}>
-        <Text style={styles.detailText}>
-          Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
-        </Text>
-        <Text style={styles.detailText}>Type: {item.type_id === 1 ? 'Strength' : 'Cardio'}</Text>
-          {item.strength_workouts && item.strength_workouts.map((set, index) => (
-          <View key={index} style={styles.setContainer}>
-            <Text style={styles.detailText}>Set {set.set_number} - {set.reps} reps | {set.weight} kgs | {set.rpe} RPE</Text>
+        <View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.accordionTitle}>{item.name}</Text>
+         
           </View>
+<View style={styles.separator} />
+<List.Accordion
+  title={
+    <Text style={styles.detailText}>
+      {`${new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+    </Text>
+  }
+  expanded={expanded[item.id]}
+  onPress={() => toggleExpand(item.id)}
+ 
+>
+          <View style={styles.workoutDetails}>
+          <Text style={styles.detailText}>
+            Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
+          </Text>
+          <Text style={styles.detailText}>Type: {item.type_id === 1 ? 'Strength' : 'Cardio'}</Text>
+          {item.strength_workouts && item.strength_workouts.map((set, index) => (
+            <View key={index} style={styles.setContainer}>
+            <Text style={styles.detailText}>Set {set.set_number}: {set.reps} reps @ {set.weight} kg at RPE {set.rpe}</Text>
+            </View>
           ))}
           {item.cardio_workouts && item.cardio_workouts.map((cardio, index) => (
-          <View key={index} style={styles.setContainer}>
+            <View key={index} style={styles.setContainer}>
             <Text style={styles.detailText}>Distance: {cardio.distance}, Calories: {cardio.calories}, Speed: {cardio.speed}, Time: {cardio.time}</Text>
-          </View>
+            </View>
           ))}
-        </View>
+          </View>
         </List.Accordion>
+        </View>
       )}
       />
       <Modal
