@@ -285,9 +285,34 @@ const WorkoutsToday = ({ userDetails }) => {
     ))
   );
 
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const changeDate = (days) => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + days);
+    setSelectedDate(newDate);
+  };
+
+  const formattedDate = selectedDate.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
   return (
-    <View style={{ flex: 1, padding: 20, marginBottom:1 }}>
-      <Text style={styles.welcomeText}>Welcome, {userDetails.username}!</Text>
+    <View style={{ flex: 1, padding: 20, marginBottom: 1 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={styles.welcomeText}>Welcome, {userDetails.username}!</Text>
+        <View style={[styles.dates, { flexDirection: 'row', alignItems: 'center' }]}>
+          <TouchableOpacity onPress={() => changeDate(-1)}>
+            <Icon name="arrow-back" size={20} />
+          </TouchableOpacity>
+          <Text style={{ marginHorizontal: 10 }}>{formattedDate}</Text>
+          <TouchableOpacity onPress={() => changeDate(1)}>
+            <Icon name="arrow-forward" size={20} />
+          </TouchableOpacity>
+        </View>
+      </View>
       <Button title="Add Workout" onPress={() => setModalVisible(true)} />
       <FlatList
       data={workouts}
@@ -465,6 +490,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
+  },
+  dates: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginTop: 3,
   },
   accordionTitle: {
     fontSize: 18,
