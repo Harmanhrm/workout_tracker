@@ -38,22 +38,32 @@ const WorkoutsToday = ({ userDetails }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchTimer, setSearchTimer] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
-
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
   useEffect(() => {
-    fetchWorkouts();
+    fetchWorkouts(selectedDate);
     fetchCategories();
-  }, []);
+  }, [selectedDate]);
 
-  const fetchWorkouts = async () => {
+  const fetchWorkouts = async (date) => {
     try {
+      if (date === 'Today') {
+        date = new Date().toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
+      }
+      console.log('Fetching workouts for date:', date);
       const response = await axios.get(`http://${SERVER_IP}:3000/user-workouts`, { params: { userId: userDetails.id } });
-      const sortedWorkouts = response.data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const filteredWorkouts = response.data.filter(workout => {
+        const workoutDate = new Date(workout.date).toLocaleDateString('en-US');
+        const selectedDate = new Date(date).toLocaleDateString('en-US');
+        return workoutDate === selectedDate;
+      });
+      const sortedWorkouts = filteredWorkouts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setWorkouts(sortedWorkouts);
     } catch (error) {
       console.log('Error', 'Failed to fetch workouts');
     }
   };
-
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`http://${SERVER_IP}:3000/categories`);
@@ -102,7 +112,7 @@ const WorkoutsToday = ({ userDetails }) => {
   
       console.log('Workout added successfully:', workoutResponse.data);
   
-      fetchWorkouts();
+      fetchWorkouts(selectedDate);
       setModalVisible(false);
       setCompletedStrengthSets([]); // Clear completed sets after successful add
     } catch (error) {
@@ -286,14 +296,19 @@ const WorkoutsToday = ({ userDetails }) => {
       </TouchableOpacity>
     ))
   );
-
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
+  
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || new Date();
+    setShowDatePicker(false);
+    setSelectedDate(currentDate);
+  };
+  
   const changeDate = (days) => {
     const newDate = new Date(selectedDate);
     newDate.setDate(newDate.getDate() + days);
     setSelectedDate(newDate);
   };
+  
   const formattedDate = (() => {
     const today = new Date();
     if (
@@ -309,14 +324,6 @@ const WorkoutsToday = ({ userDetails }) => {
       year: 'numeric',
     });
   })();
-
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || new Date();
-    setShowDatePicker(false);
-    setSelectedDate(currentDate);
-  };
 
   return (
     <View style={{ flex: 1, padding: 20, marginBottom: 1 }}>
@@ -344,97 +351,93 @@ const WorkoutsToday = ({ userDetails }) => {
       )}
       <Button title="Add Workout" onPress={() => setModalVisible(true)} />
       <FlatList
-      data={workouts}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <View>
-          <List.Accordion
-            title={
-              <View>
-          <Text style={styles.accordionTitle}>{item.name}</Text>
-          <Text style={styles.detailText}></Text>
-            <Text style={styles.detailText}>
-              {`${new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
-            </Text>
+        data={workouts}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View>
+            <List.Accordion
+              title={
+                <View>
+                  <Text style={styles.accordionTitle}>{item.name}</Text>
+                  <Text style={styles.detailText}>
+                    {`${new Date(item.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}, ${new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                  </Text>
+                </View>
+              }
+              expanded={expanded[item.id]}
+              onPress={() => toggleExpand(item.id)}
+              titleStyle={styles.accordionTitle}
+              style={styles.accordion}
+            >
+              <View style={styles.workoutDetails}>
+                <Text style={styles.detailText}>
+                  Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
+                </Text>
+                <Text style={styles.detailText}>Type: {item.type_id === 1 ? 'Strength' : 'Cardio'}</Text>
+                {item.strength_workouts && item.strength_workouts.map((set, index) => (
+                  <View key={index} style={styles.setContainer}>
+                    <Text style={styles.detailText}>Set {set.set_number}: {set.reps} reps @ {set.weight} kg at RPE {set.rpe}</Text>
+                  </View>
+                ))}
+                {item.cardio_workouts && item.cardio_workouts.map((cardio, index) => (
+                  <View key={index} style={styles.setContainer}>
+                    <Text style={styles.detailText}>Distance: {cardio.distance}, Calories: {cardio.calories}, Speed: {cardio.speed}, Time: {cardio.time}</Text>
+                  </View>
+                ))}
+              </View>
+            </List.Accordion>
+            <View style={styles.separator} />
           </View>
-          
-        }
-          expanded={expanded[item.id]}
-          onPress={() => toggleExpand(item.id)}
-          titleStyle={styles.accordionTitle}
-          style={styles.accordion} 
-        >
-          
-          <View style={styles.workoutDetails}>
-          <Text style={styles.detailText}>
-            Category: {categories.find(category => category.id === item.category_id)?.name || 'Uncategorized'}
-          </Text>
-          <Text style={styles.detailText}>Type: {item.type_id === 1 ? 'Strength' : 'Cardio'}</Text>
-          {item.strength_workouts && item.strength_workouts.map((set, index) => (
-            <View key={index} style={styles.setContainer}>
-            <Text style={styles.detailText}>Set {set.set_number}: {set.reps} reps @ {set.weight} kg at RPE {set.rpe}</Text>
-            </View>
-          ))}
-          {item.cardio_workouts && item.cardio_workouts.map((cardio, index) => (
-            <View key={index} style={styles.setContainer}>
-            <Text style={styles.detailText}>Distance: {cardio.distance}, Calories: {cardio.calories}, Speed: {cardio.speed}, Time: {cardio.time}</Text>
-            </View>
-          ))}
-          </View>
-          
-        </List.Accordion>
-        <View style={styles.separator} />
-        </View>
-      )}
+        )}
       />
       <Modal
-      animationType="slide"
-      transparent={true}
-      visible={modalVisible}
-      onRequestClose={() => setModalVisible(false)}
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
       >
-      <ScrollView contentContainerStyle={styles.modalView}>
-        <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
-        <Icon name="close" size={24} color="black" />
-        </TouchableOpacity>
-        <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={newWorkout.name}
-        onChangeText={handleNameChange}
-        />
-        <Button
-        title={showSuggestions ? "Hide Suggestions" : "Show Suggestions"}
-        onPress={() => setShowSuggestions(!showSuggestions)}
-        />
-        {renderSearchResults()}
-        {renderCategoryDropdown()}
-        <Picker
-        selectedValue={workoutType}
-        style={styles.input}
-        onValueChange={(itemValue) => setWorkoutType(itemValue)}
-        >
-        <Picker.Item label="Cardio" value="cardio" />
-        <Picker.Item label="Strength" value="strength" />
-        </Picker>
-        {renderWorkoutFields()}
-        <View style={styles.buttonRow}>
-          <Button title="Add Set" onPress={addStrengthSet} />
-          <Button title="Add Workout" onPress={handleAddWorkout} />
-          <Button title="Clear" onPress={clearStrengthSet} />
-        </View>
-        {completedStrengthSets.map((set, index) => (
-          <View key={index} style={styles.setContainer}>
-            <Text>{index + 1} </Text>
-            <Text>{set.weight} kgs</Text>
-            <Text>{set.reps} reps </Text>
-            <Text> {set.rpe} RPE</Text>
-            <TouchableOpacity onPress={() => removeCompletedSet(index)}>
-              <Icon name="close" size={20} color="red" />
-            </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.modalView}>
+          <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+            <Icon name="close" size={24} color="black" />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Name"
+            value={newWorkout.name}
+            onChangeText={handleNameChange}
+          />
+          <Button
+            title={showSuggestions ? "Hide Suggestions" : "Show Suggestions"}
+            onPress={() => setShowSuggestions(!showSuggestions)}
+          />
+          {renderSearchResults()}
+          {renderCategoryDropdown()}
+          <Picker
+            selectedValue={workoutType}
+            style={styles.input}
+            onValueChange={(itemValue) => setWorkoutType(itemValue)}
+          >
+            <Picker.Item label="Cardio" value="cardio" />
+            <Picker.Item label="Strength" value="strength" />
+          </Picker>
+          {renderWorkoutFields()}
+          <View style={styles.buttonRow}>
+            <Button title="Add Set" onPress={addStrengthSet} />
+            <Button title="Add Workout" onPress={handleAddWorkout} />
+            <Button title="Clear" onPress={clearStrengthSet} />
           </View>
-        ))}
-      </ScrollView>
+          {completedStrengthSets.map((set, index) => (
+            <View key={index} style={styles.setContainer}>
+              <Text>{index + 1} </Text>
+              <Text>{set.weight} kgs</Text>
+              <Text>{set.reps} reps </Text>
+              <Text> {set.rpe} RPE</Text>
+              <TouchableOpacity onPress={() => removeCompletedSet(index)}>
+                <Icon name="close" size={20} color="red" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
       </Modal>
     </View>
   );
