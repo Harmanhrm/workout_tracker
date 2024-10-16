@@ -187,60 +187,60 @@ const WorkoutsToday = ({ userDetails }) => {
       return (
         <>
           <View style={styles.setRow}>
-            <TextInput
-              style={styles.inputSmall}
-              placeholder="Reps"
-              value={strengthSets[0].reps.toString()}
-              onChangeText={(text) => {
-                const newSets = [...strengthSets];
-                newSets[0].reps = parseInt(text) || 0;
-                setStrengthSets(newSets);
-              }}
-            />
-            <View style={styles.arrowContainer}>
-              <TouchableOpacity onPress={() => incrementValue('reps')}>
-                <Icon name="arrow-up" size={20} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => decrementValue('reps')}>
-                <Icon name="arrow-down" size={20} />
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              style={styles.inputSmall}
-              placeholder="Weight"
-              value={strengthSets[0].weight.toString()}
-              onChangeText={(text) => {
-                const newSets = [...strengthSets];
-                newSets[0].weight = parseInt(text) || 0;
-                setStrengthSets(newSets);
-              }}
-            />
-            <View style={styles.arrowContainer}>
-              <TouchableOpacity onPress={() => incrementValue('weight')}>
-                <Icon name="arrow-up" size={20} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => decrementValue('weight')}>
-                <Icon name="arrow-down" size={20} />
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              style={styles.inputSmall}
-              placeholder="RPE"
-              value={strengthSets[0].rpe.toString()}
-              onChangeText={(text) => {
-                const newSets = [...strengthSets];
-                newSets[0].rpe = parseInt(text) || 0;
-                setStrengthSets(newSets);
-              }}
-            />
-            <View style={styles.arrowContainer}>
-              <TouchableOpacity onPress={() => incrementValue('rpe')}>
-                <Icon name="arrow-up" size={20} />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => decrementValue('rpe')}>
-                <Icon name="arrow-down" size={20} />
-              </TouchableOpacity>
-            </View>
+        <TextInput
+          style={styles.inputSmall}
+          placeholder="Reps"
+          value={strengthSets[0].reps === 0 ? '' : strengthSets[0].reps.toString()}
+          onChangeText={(text) => {
+            const newSets = [...strengthSets];
+            newSets[0].reps = parseInt(text) || 0;
+            setStrengthSets(newSets);
+          }}
+        />
+        <View style={styles.arrowContainer}>
+          <TouchableOpacity onPress={() => incrementValue('reps')}>
+            <Icon name="arrow-up" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => decrementValue('reps')}>
+            <Icon name="arrow-down" size={20} />
+          </TouchableOpacity>
+        </View>
+        <TextInput
+          style={styles.inputSmall}
+          placeholder="Weight"
+          value={strengthSets[0].weight === 0 ? '' : strengthSets[0].weight.toString()}
+          onChangeText={(text) => {
+            const newSets = [...strengthSets];
+            newSets[0].weight = parseInt(text) || 0;
+            setStrengthSets(newSets);
+          }}
+        />
+        <View style={styles.arrowContainer}>
+          <TouchableOpacity onPress={() => incrementValue('weight')}>
+            <Icon name="arrow-up" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => decrementValue('weight')}>
+            <Icon name="arrow-down" size={20} />
+          </TouchableOpacity>
+        </View>
+        <TextInput
+          style={styles.inputSmall}
+          placeholder="RPE"
+          value={strengthSets[0].rpe === 0 ? '' : strengthSets[0].rpe.toString()}
+          onChangeText={(text) => {
+            const newSets = [...strengthSets];
+            newSets[0].rpe = parseInt(text) || 0;
+            setStrengthSets(newSets);
+          }}
+        />
+        <View style={styles.arrowContainer}>
+          <TouchableOpacity onPress={() => incrementValue('rpe')}>
+            <Icon name="arrow-up" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => decrementValue('rpe')}>
+            <Icon name="arrow-down" size={20} />
+          </TouchableOpacity>
+        </View>
           </View>
           <View style={styles.buttonRow}>
             <Button title="Add Set" onPress={addStrengthSet} />
