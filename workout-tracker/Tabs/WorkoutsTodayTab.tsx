@@ -48,9 +48,6 @@ const WorkoutsToday = ({ userDetails }) => {
 
   const fetchWorkouts = async (date) => {
     try {
-      if (date === 'Today') {
-        date = new Date().toISOString().split('T')[0]; // Format the date as YYYY-MM-DD
-      }
       console.log('Fetching workouts for date:', date);
       const response = await axios.get(`http://${SERVER_IP}:3000/user-workouts`, { params: { userId: userDetails.id } });
       const filteredWorkouts = response.data.filter(workout => {
@@ -103,7 +100,7 @@ const WorkoutsToday = ({ userDetails }) => {
         typeId: workoutType === 'cardio' ? 2 : 1,
         cardioDetails: workoutType === 'cardio' ? newCardioWorkout : null,
         strengthDetails: workoutType === 'strength' ? filteredStrengthSets : null,
-        date: new Date().toISOString(),
+        date: selectedDate.toISOString(), // Use selectedDate instead of new Date()
       };
   
       console.log('Sending workout data:', workoutData);
